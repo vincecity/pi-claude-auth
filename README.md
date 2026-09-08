@@ -3,6 +3,28 @@
 Self-contained Anthropic auth for the [pi coding agent](https://pi.dev) using
 your existing Claude Code credentials — no separate login or API key needed.
 
+## Fork distribution
+
+This is the [vincecity fork](https://github.com/vincecity/pi-claude-auth) of
+[pankajudhas81/pi-claude-auth](https://github.com/pankajudhas81/pi-claude-auth).
+The npm scope below belongs to upstream, not this fork. Install this fork
+using a remotely reachable commit:
+
+```bash
+pi remove npm:pi-claude-auth
+pi remove npm:@pankajudhas81/pi-claude-auth
+pi install git:github.com/vincecity/pi-claude-auth@<commit>
+```
+
+If an existing package entry has resource filters, keep those filters and
+replace only its `source` instead. Keep just one auth package enabled.
+Pi installs Git packages under the active agent directory's
+`git/github.com/vincecity/pi-claude-auth/`. No npm publication is required.
+To change a pin, use `pi install` with the new commit. `pi update --extensions`
+reconciles the existing pin but does not select a newer commit.
+
+The upstream installation instructions below remain for upstream users.
+
 ## Quick start
 
 ```bash
@@ -176,18 +198,38 @@ one account is found, the picker is skipped.
 
 ### Claude Code version pinning
 
-The Claude Code version is pinned to `2.1.160` for billing header computation.
-If billing reverts to extra usage after a Claude Code update, override:
+The default CLI version is `2.1.258`. To change it without editing the
+installed package, create `pi-claude-auth.json` in the active Pi agent directory:
 
-```bash
-export ANTHROPIC_CLI_VERSION=<new-version>
+```json
+{
+    "cliVersion": "2.1.258"
+}
 ```
 
-or update the package:
+The directory comes from Pi's `getAgentDir()`: `PI_CODING_AGENT_DIR` when set,
+otherwise `~/.pi/agent`. Studio standard and development homes each have their
+own file. SDK hosts should set `PI_CODING_AGENT_DIR` before loading extensions;
+Pi does not expose a loader's explicit `agentDir` to extension factories.
+Project files are not read.
 
-```bash
-pi update npm:@pankajudhas81/pi-claude-auth
-```
+Precedence is a valid `ANTHROPIC_CLI_VERSION`, then the JSON `cliVersion`, then
+`2.1.258`. Versions must be strings with three non-negative integer parts,
+without leading zeroes, prerelease suffixes, or build metadata. Surrounding
+whitespace is trimmed; values longer than 32 characters are rejected. Invalid
+environment values warn and fall through. Missing files or omitted settings
+use the default silently. Malformed or unreadable files and invalid JSON values
+warn once during resolution and use the default. File contents are not logged.
+
+Version and entrypoint are captured once per extension load and used for both
+the user-agent and billing header. Pi 0.85+ also applies the user-agent in the
+session's request-header hook, so sessions sharing a model runtime cannot
+replace each other's version. Older Pi uses the registered provider header.
+No config file is read per request. Use Pi's
+`/reload` or restart after editing the file. In Studio, restart to refresh all
+sessions and cached workflow loaders. Environment changes require restarting
+the host process. `ANTHROPIC_USER_AGENT` still overrides the entire user-agent;
+if set, you are responsible for matching its version to `cliVersion`.
 
 ### Diagnostic logging
 
@@ -233,7 +275,7 @@ write-back is enabled by default to keep your stored credentials valid.
 | ----------------------- | ----------------------------------------------------------------------- | ------------- |
 | `PI_CODING_AGENT_DIR`   | pi's config directory (where `auth.json` lives)                         | `~/.pi/agent` |
 | `PI_CLAUDE_AUTH_DEBUG`  | Enable diagnostic logging (`1` for default path, or a custom file path) | disabled      |
-| `ANTHROPIC_CLI_VERSION` | Claude CLI version for billing headers                                  | `2.1.160`     |
+| `ANTHROPIC_CLI_VERSION` | Highest-priority CLI version for user-agent and billing headers          | JSON setting, then `2.1.258` |
 
 ## How it works
 

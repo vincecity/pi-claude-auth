@@ -84,7 +84,7 @@ test("buildUserAgent: default Claude Code form", () => {
     delete process.env.ANTHROPIC_USER_AGENT
     delete process.env.ANTHROPIC_CLI_VERSION
     delete process.env.CLAUDE_CODE_ENTRYPOINT
-    assert.equal(buildUserAgent(), "claude-cli/2.1.160 (external, sdk-cli)")
+    assert.equal(buildUserAgent(), "claude-cli/2.1.258 (external, sdk-cli)")
 })
 
 test("buildUserAgent: honors version and entrypoint overrides", () => {

@@ -1,4 +1,7 @@
 import { createHash } from "node:crypto"
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
+import { getAgentDir } from "@earendil-works/pi-coding-agent"
 
 const BILLING_SALT = "59cf53e54c78"
 
@@ -6,16 +9,51 @@ const BILLING_SALT = "59cf53e54c78"
 // user-agent. The billing header's cc_version must match the user-agent
 // version for Anthropic's subscription-billing validation to route the request
 // to the Claude Pro/Max plan instead of pay-as-you-go / extra usage.
-// Overridable via ANTHROPIC_CLI_VERSION.
-export const CC_VERSION = "2.1.160"
+// Overridable via ANTHROPIC_CLI_VERSION or pi-claude-auth.json.
+export const CC_VERSION = "2.1.258"
 
 // Billing entrypoint, mirrored in the user-agent's `(external, <entrypoint>)`
 // suffix. Overridable via CLAUDE_CODE_ENTRYPOINT.
 export const CC_ENTRYPOINT = "sdk-cli"
 
-/** Resolve the Claude Code CLI version (env override wins). */
-export function getCliVersion(): string {
-    return process.env.ANTHROPIC_CLI_VERSION ?? CC_VERSION
+/** Read once at extension load. Never cache across agent homes or sessions. */
+export function getCliVersion(agentDir = getAgentDir()): string {
+    const override = process.env.ANTHROPIC_CLI_VERSION
+    if (override !== undefined) {
+        if (isCliVersion(override)) return override.trim()
+        console.warn(
+            "pi-claude-auth: Ignoring invalid ANTHROPIC_CLI_VERSION; expected major.minor.patch.",
+        )
+    }
+
+    const path = join(agentDir, "pi-claude-auth.json")
+    try {
+        const config: unknown = JSON.parse(readFileSync(path, "utf8"))
+        if (!config || typeof config !== "object" || Array.isArray(config)) {
+            throw new Error("expected a JSON object")
+        }
+        const version = (config as { cliVersion?: unknown }).cliVersion
+        if (version === undefined) return CC_VERSION
+        if (!isCliVersion(version))
+            throw new Error("expected cliVersion: major.minor.patch")
+        return version.trim()
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+            // Do not log file contents, which may contain unrelated private data.
+            console.warn(
+                `pi-claude-auth: Cannot use ${path}; using CLI version ${CC_VERSION}.`,
+            )
+        }
+        return CC_VERSION
+    }
+}
+
+function isCliVersion(value: unknown): value is string {
+    return (
+        typeof value === "string" &&
+        value.length <= 32 &&
+        /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(value.trim())
+    )
 }
 
 /** Resolve the billing entrypoint (env override wins). */
@@ -28,10 +66,13 @@ export function getEntrypoint(): string {
  * `claude-cli/<version>`; Anthropic's plan-billing validation expects the full
  * `claude-cli/<version> (external, <entrypoint>)` form, so we override it.
  */
-export function buildUserAgent(): string {
+export function buildUserAgent(
+    version = getCliVersion(),
+    entrypoint = getEntrypoint(),
+): string {
     return (
         process.env.ANTHROPIC_USER_AGENT ??
-        `claude-cli/${getCliVersion()} (external, ${getEntrypoint()})`
+        `claude-cli/${version} (external, ${entrypoint})`
     )
 }
 
