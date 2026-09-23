@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2
+
+- Default to Claude CLI `2.1.280`; environment and agent-home overrides retain precedence.
+
 ## 0.1.1, vincecity fork
 
 - Default to Claude CLI `2.1.258`.
