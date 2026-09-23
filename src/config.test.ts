@@ -24,9 +24,9 @@ function config(dir: string, contents: string) {
     writeFileSync(join(dir, "pi-claude-auth.json"), contents)
 }
 
-test("missing config uses 2.1.258 without a warning", () => {
+test("missing config uses 2.1.280 without a warning", () => {
     const warn = mock.method(console, "warn", () => {})
-    assert.equal(getCliVersion(), "2.1.258")
+    assert.equal(getCliVersion(), "2.1.280")
     assert.equal(warn.mock.callCount(), 0)
 })
 
@@ -48,7 +48,7 @@ test("valid environment override wins even over malformed JSON", () => {
 test("invalid environment override falls through to local config", () => {
     config(process.env.PI_CODING_AGENT_DIR!, '{"cliVersion":"2.2.0"}')
     const warn = mock.method(console, "warn", () => {})
-    for (const value of ["", "2.1", "v2.1.258", "2.1.258\r\ninjected: yes"]) {
+    for (const value of ["", "2.1", "v2.1.280", "2.1.280\r\ninjected: yes"]) {
         process.env.ANTHROPIC_CLI_VERSION = value
         assert.equal(getCliVersion(), "2.2.0")
     }
@@ -59,13 +59,13 @@ for (const value of [
     "{invalid",
     "null",
     "[]",
-    '"2.1.258"',
+    '"2.1.280"',
     '{"cliVersion":258}',
     '{"cliVersion":null}',
     '{"cliVersion":""}',
     '{"cliVersion":"2.1"}',
-    '{"cliVersion":"02.1.258"}',
-    '{"cliVersion":"2.1.258-beta"}',
+    '{"cliVersion":"02.1.280"}',
+    '{"cliVersion":"2.1.280-beta"}',
 ]) {
     test(`invalid config falls back: ${value}`, () => {
         config(process.env.PI_CODING_AGENT_DIR!, value)
