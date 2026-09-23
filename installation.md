@@ -2,6 +2,17 @@
 
 These instructions are designed for AI coding agents.
 
+## vincecity fork
+
+For this fork, follow [fork distribution](README.md#fork-distribution), not
+the upstream npm instructions below. Use a commit reachable on GitHub. Keep
+existing resource filters when replacing the package source, and enable only
+one copy of the auth extension. Do not print credentials during verification.
+`pi list` confirms installation without making an auth or provider request.
+
+For a local CLI version override, see
+[Claude Code version pinning](README.md#claude-code-version-pinning).
+
 ## Prerequisites
 
 Before installing, verify you have pi and Claude Code installed and

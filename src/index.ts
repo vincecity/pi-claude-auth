@@ -1,7 +1,6 @@
 import type {
     ExtensionAPI,
     ExtensionContext,
-    OAuthCredential,
     ProviderConfig,
 } from "@earendil-works/pi-coding-agent"
 import {
@@ -18,7 +17,7 @@ import {
 } from "./credentials.ts"
 import { readAllClaudeAccounts, type ClaudeAccount } from "./keychain.ts"
 import { initLogger, log } from "./logger.ts"
-import { buildUserAgent } from "./signing.ts"
+import { buildUserAgent, getCliVersion, getEntrypoint } from "./signing.ts"
 import { injectBillingHeader } from "./transforms.ts"
 
 export {
@@ -57,10 +56,24 @@ function toOAuthCreds(creds: ClaudeCredentials): OAuthCreds {
  * immediately — and AuthStorage persists it to auth.json too.
  */
 function applyCredential(ctx: ExtensionContext): boolean {
+    // Pi 0.85+ reads the seeded auth.json through its credential store.
+    // Only older Pi versions need an explicit in-memory AuthStorage update.
+    const authStorage = (
+        ctx.modelRegistry as unknown as {
+            authStorage?: {
+                set(
+                    provider: string,
+                    credential: OAuthCreds & { type: "oauth" },
+                ): void
+            }
+        }
+    ).authStorage
+    if (!authStorage) return false
+
     const creds = getCachedCredentials()
     if (!creds) return false
 
-    const credential: OAuthCredential = {
+    const credential: OAuthCreds & { type: "oauth" } = {
         type: "oauth",
         access: creds.accessToken,
         refresh: creds.refreshToken,
@@ -68,7 +81,7 @@ function applyCredential(ctx: ExtensionContext): boolean {
     }
 
     try {
-        ctx.modelRegistry.authStorage.set(PROVIDER_ID, credential)
+        authStorage.set(PROVIDER_ID, credential)
         log("credential_applied", { provider: PROVIDER_ID })
         return true
     } catch (err) {
@@ -101,6 +114,11 @@ function applyCredential(ctx: ExtensionContext): boolean {
  */
 const extension = async (pi: ExtensionAPI): Promise<void> => {
     initLogger()
+
+    // One immutable snapshot feeds both headers, even with concurrent sessions.
+    const cliVersion = getCliVersion()
+    const entrypoint = getEntrypoint()
+    const userAgent = buildUserAgent(cliVersion, entrypoint)
 
     let accounts: ClaudeAccount[] = []
     try {
@@ -232,7 +250,24 @@ const extension = async (pi: ExtensionAPI): Promise<void> => {
     // of the subscription plan.
     pi.registerProvider(PROVIDER_ID, {
         oauth,
-        headers: { "user-agent": buildUserAgent() },
+        headers: { "user-agent": userAgent },
+    })
+
+    // Studio shares a model runtime across sessions. A later factory can replace
+    // provider headers, so Pi 0.85+ also sets the UA on this session's requests.
+    // Older Pi accepts unknown event names but does not emit this hook.
+    const headersApi = pi as unknown as {
+        on(
+            event: "before_provider_headers",
+            handler: (
+                event: { headers: Record<string, string | null> },
+                ctx: ExtensionContext,
+            ) => void,
+        ): void
+    }
+    headersApi.on("before_provider_headers", (event, ctx) => {
+        if (ctx.model?.provider !== PROVIDER_ID) return
+        event.headers["user-agent"] = userAgent
     })
 
     // Inject the live credential into pi's AuthStorage on every session start.
@@ -249,7 +284,11 @@ const extension = async (pi: ExtensionAPI): Promise<void> => {
     // user-agent for OAuth tokens but not this header.
     pi.on("before_provider_request", (event) => {
         try {
-            const updated = injectBillingHeader(event.payload)
+            const updated = injectBillingHeader(
+                event.payload,
+                cliVersion,
+                entrypoint,
+            )
             if (updated) {
                 log("billing_header_injected", {})
                 return updated

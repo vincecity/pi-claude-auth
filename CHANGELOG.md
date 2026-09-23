@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.2
+
+- Default to Claude CLI `2.1.280`; environment and agent-home overrides retain precedence.
+
+## 0.1.1, vincecity fork
+
+- Default to Claude CLI `2.1.258`.
+- Read `cliVersion` from the active Pi home's `pi-claude-auth.json`, with
+  `ANTHROPIC_CLI_VERSION` taking precedence.
+- Snapshot version and entrypoint per extension load for matching user-agent
+  and billing headers without request-time config reads.
+- Support Pi 0.85's credential store while retaining the older AuthStorage path.
+- Distribute through Pi's pinned Git package support. No npm release.
+
 # [0.1.0](https://github.com/pankajudhas81/pi-claude-auth/compare/v0.0.1...v0.1.0) (2026-05-30)
 
 ## 0.0.1

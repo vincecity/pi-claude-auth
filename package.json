@@ -1,6 +1,6 @@
 {
     "name": "@pankajudhas81/pi-claude-auth",
-    "version": "0.1.0",
+    "version": "0.1.2",
     "description": "Pi coding agent extension that uses your Claude Code credentials — no separate login needed.",
     "keywords": [
         "anthropic",
@@ -13,7 +13,7 @@
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/pankajudhas81/pi-claude-auth.git"
+        "url": "git+https://github.com/vincecity/pi-claude-auth.git"
     },
     "files": [
         "src",
@@ -36,7 +36,7 @@
     },
     "scripts": {
         "build": "tsc",
-        "test": "node --test --experimental-strip-types src/**/*.test.ts",
+        "test": "node --test --experimental-strip-types --experimental-test-module-mocks src/**/*.test.ts",
         "test:models": "node --experimental-strip-types scripts/test-models.ts",
         "validate:oauth": "node --experimental-strip-types scripts/validate-oauth-refresh.ts",
         "lint": "oxlint && oxfmt --check .",

@@ -42,6 +42,8 @@ function entryText(entry: unknown): string {
  */
 export function injectBillingHeader(
     payload: unknown,
+    version = getCliVersion(),
+    entrypoint = getEntrypoint(),
 ): AnthropicPayload | undefined {
     if (!payload || typeof payload !== "object") return undefined
 
@@ -70,11 +72,7 @@ export function injectBillingHeader(
         content?: string | Array<{ type?: string; text?: string }>
     }>
 
-    const billingHeader = buildBillingHeaderValue(
-        messages,
-        getCliVersion(),
-        getEntrypoint(),
-    )
+    const billingHeader = buildBillingHeaderValue(messages, version, entrypoint)
 
     // Billing header goes first, ahead of pi's identity block. No
     // cache_control so it does not consume a cache breakpoint.
