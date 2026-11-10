@@ -198,12 +198,12 @@ one account is found, the picker is skipped.
 
 ### Claude Code version pinning
 
-The default CLI version is `2.1.280`. To change it without editing the
+The default CLI version is `2.1.322`. To change it without editing the
 installed package, create `pi-claude-auth.json` in the active Pi agent directory:
 
 ```json
 {
-    "cliVersion": "2.1.280"
+    "cliVersion": "2.1.322"
 }
 ```
 
@@ -214,7 +214,7 @@ Pi does not expose a loader's explicit `agentDir` to extension factories.
 Project files are not read.
 
 Precedence is a valid `ANTHROPIC_CLI_VERSION`, then the JSON `cliVersion`, then
-`2.1.280`. Versions must be strings with three non-negative integer parts,
+`2.1.322`. Versions must be strings with three non-negative integer parts,
 without leading zeroes, prerelease suffixes, or build metadata. Surrounding
 whitespace is trimmed; values longer than 32 characters are rejected. Invalid
 environment values warn and fall through. Missing files or omitted settings
@@ -271,11 +271,11 @@ write-back is enabled by default to keep your stored credentials valid.
 
 ## Environment variables
 
-| Variable                | Description                                                             | Default       |
-| ----------------------- | ----------------------------------------------------------------------- | ------------- |
-| `PI_CODING_AGENT_DIR`   | pi's config directory (where `auth.json` lives)                         | `~/.pi/agent` |
-| `PI_CLAUDE_AUTH_DEBUG`  | Enable diagnostic logging (`1` for default path, or a custom file path) | disabled      |
-| `ANTHROPIC_CLI_VERSION` | Highest-priority CLI version for user-agent and billing headers          | JSON setting, then `2.1.280` |
+| Variable                | Description                                                             | Default                      |
+| ----------------------- | ----------------------------------------------------------------------- | ---------------------------- |
+| `PI_CODING_AGENT_DIR`   | pi's config directory (where `auth.json` lives)                         | `~/.pi/agent`                |
+| `PI_CLAUDE_AUTH_DEBUG`  | Enable diagnostic logging (`1` for default path, or a custom file path) | disabled                     |
+| `ANTHROPIC_CLI_VERSION` | Highest-priority CLI version for user-agent and billing headers         | JSON setting, then `2.1.322` |
 
 ## How it works
 

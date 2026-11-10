@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.3
+
+- Default to Claude CLI `2.1.322` to meet the `2.1.290` minimum required by newer models. Environment and agent-home overrides retain precedence.
+
 ## 0.1.2
 
 - Default to Claude CLI `2.1.280`; environment and agent-home overrides retain precedence.

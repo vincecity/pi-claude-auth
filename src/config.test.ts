@@ -24,9 +24,9 @@ function config(dir: string, contents: string) {
     writeFileSync(join(dir, "pi-claude-auth.json"), contents)
 }
 
-test("missing config uses 2.1.280 without a warning", () => {
+test("missing config uses 2.1.322 without a warning", () => {
     const warn = mock.method(console, "warn", () => {})
-    assert.equal(getCliVersion(), "2.1.280")
+    assert.equal(getCliVersion(), "2.1.322")
     assert.equal(warn.mock.callCount(), 0)
 })
 
